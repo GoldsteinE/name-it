@@ -1,0 +1,18 @@
+[package]
+name = "name-it"
+version = "0.1.0"
+edition = "2021"
+description = "Give a name to async fn return types"
+repository = "https://github.com/GoldsteinE/name-it"
+license = "BlueOak-1.0.0"
+keywords = ["tait", "type-alias-impl-trait", "stable", "async"]
+categories = ["no-std", "rust-patterns", "asynchronous"]
+exclude = ["flake.nix", "flake.lock", ".envrc"]
+rust-version = "1.61"
+
+[dependencies]
+elain = "0.3.0"
+name-it-macros = { version = "0.1.0", path = "macros" }
+
+[dev-dependencies]
+futures = { version = "0.3.21", features = ["executor"] }
