@@ -135,6 +135,7 @@ pub use elain as _elain;
 #[macro_export]
 macro_rules! _name_it_inner {
     ($v:vis type $name:ident = $func:ident($($underscores:tt)*) -> $ret:ty$(;)?) => {
+        #[repr(C)]
         $v struct $name<'fut>
         where
             $crate::_elain::Align<{$crate::align_of_fut(&($func as fn($($underscores)*) -> _))}>: $crate::_elain::Alignment,
