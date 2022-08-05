@@ -16,14 +16,14 @@
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            rust-analyzer
-            (rust-bin.nightly."2022-07-10".default.override {
+            (rust-bin.nightly."2022-08-04".default.override {
               extensions = [
                 "rust-src"
                 "cargo"
                 "rustc"
                 "rustfmt"
                 "miri"
+                "rust-analyzer"
               ];
             })
             cargo-expand

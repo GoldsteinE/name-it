@@ -1,0 +1,11 @@
+error[E0726]: implicit elided lifetime not allowed here
+  --> tests/ui/elided-lifetimes.rs:10:26
+   |
+10 | async fn has_lifetime(x: Wrapper) -> String {
+   |                          ^^^^^^^ expected lifetime parameter
+   |
+   = note: assuming a `'static` lifetime...
+help: indicate the anonymous lifetime
+   |
+10 | async fn has_lifetime(x: Wrapper<'_>) -> String {
+   |                                 ++++

@@ -2,12 +2,10 @@ use futures::{executor::block_on, join};
 use name_it::name_it;
 
 #[name_it(First)]
-async fn first() {
-}
+async fn first() {}
 
 #[name_it(Second)]
-async fn second() {
-}
+async fn second() {}
 
 #[test]
 fn test() {

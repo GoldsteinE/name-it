@@ -1,0 +1,11 @@
+error[E0505]: cannot move out of `x` because it is borrowed
+  --> tests/ui/lifetimes.rs:17:10
+   |
+15 |     let y = has_lifetime(x.as_str());
+   |                          ---------- borrow of `x` occurs here
+16 |     pin_mut!(y);
+17 |     drop(x);
+   |          ^ move out of `x` occurs here
+18 |     y.now_or_never().unwrap();
+19 | }
+   | - borrow might be used here, when `y` is dropped and runs the destructor for type `Named<_has_lifetime_impl::Test<'_>>`

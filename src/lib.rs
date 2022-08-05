@@ -1,6 +1,6 @@
-//! So, you have a nice `async fn` and you want to store a future it returns in a struct. There's
-//! no need for boxing or dynamic dispatch: you statically know the type. You just need to
-//! `#[name_it]`.
+//! So, you have a nice `async fn` and you want to store a future it returns in
+//! a struct. There's no need for boxing or dynamic dispatch: you statically
+//! know the type. You just need to `#[name_it]`.
 //!
 //! ```rust
 //! # use name_it::name_it;
@@ -18,30 +18,61 @@
 //! # }
 //! ```
 //!
-//! Function attributes (including doc comments) are preserved. Created type will have the same
-//! visibility as the function itself.
+//! Function attributes (including doc comments) are preserved. Created type
+//! will have the same visibility as the function itself and the same size and
+//! alignment as original future.
 //!
-//! **MSRV** is 1.61. As far as I know, it's impossible to make it work on older Rust versions.
+//! **MSRV** is 1.61. As far as I know, it's impossible to make it work on older
+//! Rust versions.
 //!
 //! # Safety
-//! I don't see why this would be unsound. Miri likes it and all unsafe involved isn't particulary
-//! criminal. Nonetheless, I can't be completely sure that it is sound yet.
+//! I don't see why this would be unsound. Miri likes it, I discussed it with
+//! other people, and all unsafe involved isn't particulary criminal.
+//!
+//! To address some particular concerns:
+//!
+//! 1. Transmuting any type to an array of `MaybeUninit<u8>` and back is
+//! currently considered sound.
+//!
+//! 2. Alignment of the generated type is preserved.
+//!
+//! 3. Generated type is never used unpinned, except in destructor, and is never
+//! moved in destructor.
+//!
+//! 4. Lifetime of the generated type is tied to the lifetimes of every input,
+//! so use-after-free is not possible.
+//!
+//! Nonetheless, I can't be completely sure that it is sound yet. If you find
+//! any soundness problems, please, file an issue.
 //!
 //! # Limitations
 //!
 //! ## Absolute
 //!
-//! 1. It emulates TAITs, but it can't emulate GATs, so async trait methods capturing `self` by ref are
-//!    no-go.
-//! 2. It can't be directly applied to a method. You can move the body of the method into a free
-//!    function and make your method a thin sync wrapper.
+//! 1. It emulates TAITs, but it can't emulate GATs, so async trait methods
+//! capturing `self` by ref are no-go.
+//!
+//! 2. It can't be directly applied to a method. You can move the body of the
+//! method into a free function and make your method a thin sync wrapper.
 //!
 //! ## (Probably) solvable
 //!
-//! 1. It doesn't currently support generics. There's no fundamental problem with it, it just needs
-//!    to be implemented in the macros (help wanted!).
-//! 2. All arguments must be simple identifiers (so things like `(x, y): (i32, i32)` are not
-//!    allowed). Again, this should be possible to implement, it's just not implemented yet.
+//! 1. It doesn't currently support generics. There's no fundamental problem
+//! with it, it just needs to be implemented in the macros (help wanted!).
+//! Reusing lifetimes from the outer scope (i.e. in static associated functions)
+//! is also not allowed, so all involved lifetimes must be elided.
+//!
+//! 2. All arguments must be simple identifiers (so things like `(x, y): (i32,
+//! i32)` are not allowed). Again, this should be possible to implement, it's
+//! just not implemented yet.
+//!
+//! 3. All generated types are `!Unpin`. It's possible
+//! to make them `Unpin` if the underlying future is `Unpin`, but that hasn't
+//! been done yet.
+//!
+//! 4. While the underlying trick could work on most `impl Trait` types, this
+//! crate only implements it for `async fn`. It's not clear how to make the
+//! macro work for any trait.
 
 #![no_std]
 // lint me harder
@@ -80,12 +111,14 @@
 
 use core::{
     future::Future,
+    marker::PhantomPinned,
     mem::{ManuallyDrop, MaybeUninit},
     pin::Pin,
     task::{Context, Poll},
 };
 
-/// A way to name the return type of an async function. See [crate docs](crate) for more info.
+/// A way to name the return type of an async function. See [crate docs](crate)
+/// for more info.
 pub use name_it_macros::name_it;
 
 // SAFETY: can only be implemented on functions returning `Self::Fut`
@@ -102,25 +135,28 @@ pub use elain as _elain;
 #[macro_export]
 macro_rules! _name_it_inner {
     ($v:vis type $name:ident = $func:ident($($underscores:tt)*) -> $ret:ty$(;)?) => {
-        $v struct $name
+        $v struct $name<'fut>
         where
             $crate::_elain::Align<{$crate::align_of_fut(&($func as fn($($underscores)*) -> _))}>: $crate::_elain::Alignment,
         {
             bytes: [::core::mem::MaybeUninit<u8>; $crate::size_of_fut(&($func as fn($($underscores)*) -> _))],
             _alignment: $crate::_elain::Align<{$crate::align_of_fut(&($func as fn($($underscores)*) -> _))}>,
+            // FIXME: invariant is probably too strict
+            _lifetime: ::core::marker::PhantomData<&'fut mut &'fut mut ()>,
         }
 
-        impl $name {
+        impl<'fut> $name<'fut> {
             #[doc(hidden)]
             $v unsafe fn new(bytes: [::core::mem::MaybeUninit<u8>; $crate::size_of_fut(&($func as fn($($underscores)*) -> _))]) -> Self {
                 Self {
                     bytes,
                     _alignment: $crate::_elain::Align::NEW,
+                    _lifetime: ::core::marker::PhantomData,
                 }
             }
         }
 
-        impl ::core::future::Future for $name {
+        impl<'fut> ::core::future::Future for $name<'fut> {
             type Output = $ret;
 
             fn poll(self: ::core::pin::Pin<&mut Self>, cx: &mut ::core::task::Context<'_>) -> ::core::task::Poll<$ret> {
@@ -133,7 +169,7 @@ macro_rules! _name_it_inner {
             }
         }
 
-        impl ::core::ops::Drop for $name {
+        impl<'fut> ::core::ops::Drop for $name<'fut> {
             fn drop(&mut self) {
                 // SAFETY: this is the only `::dispose()` call and we're not lying about the type
                 unsafe {
@@ -142,6 +178,38 @@ macro_rules! _name_it_inner {
             }
         }
     };
+}
+
+/// Wrapper type for named futures. Type of your future will be something like
+/// ```rust,ignore
+/// type YourName<'fut> = Named</* implementation detail */>;
+/// ```
+pub struct Named<T> {
+    inner: T,
+    _pinned: PhantomPinned,
+}
+
+impl<T> Named<T> {
+    #[doc(hidden)]
+    pub fn new(inner: T) -> Self {
+        Self {
+            inner,
+            _pinned: PhantomPinned,
+        }
+    }
+}
+
+impl<T> Future for Named<T>
+where
+    T: Future,
+{
+    type Output = T::Output;
+
+    #[inline]
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        // SAFETY: we'll never use `.inner` unpinned
+        unsafe { self.map_unchecked_mut(|this| &mut this.inner) }.poll(cx)
+    }
 }
 
 #[repr(C)]
@@ -171,7 +239,8 @@ pub unsafe fn poll<F: FutParams, const N: usize>(
     cx: &mut Context<'_>,
     _: F,
 ) -> Poll<F::Output> {
-    // SAFETY: `transmute_generic()` is safe because caller promised us that's the type inside
+    // SAFETY: `transmute_generic()` is safe because caller promised us that's the
+    // type inside
     let fut = unsafe {
         this.map_unchecked_mut(|x| {
             // SAFETY: is safe because we never access this field unpinned
@@ -186,7 +255,8 @@ pub unsafe fn poll<F: FutParams, const N: usize>(
 pub unsafe fn dispose<F: FutParams, const N: usize>(this: &mut [MaybeUninit<u8>; N], _: F) {
     // SAFETY: caller promised us that's the type inside
     let fut = unsafe { transmute_generic::<&mut _, &mut MaybeUninit<F::Fut>>(this) };
-    // SAFETY: we're only calling this one time, in our `Drop`, and never use this after
+    // SAFETY: we're only calling this one time, in our `Drop`, and never use this
+    // after
     unsafe { fut.assume_init_drop() };
 }
 
