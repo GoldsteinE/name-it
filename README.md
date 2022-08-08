@@ -42,11 +42,11 @@ Nonetheless, I can't be completely sure that it is sound yet. If you find any so
 
 1. It emulates TAITs, but it can’t emulate GATs, so async trait methods capturing `self` by ref are no-go.
 
-2. It can’t be directly applied to a method. You can move the body of the method into a free function and make your method a thin sync wrapper.
+2. It can’t be directly applied to a method or associated function. You can move the body of the method into a free function and make your method a thin sync wrapper.
 
 ### (Probably) solvable
 
-1. It doesn't currently support generics. There's no fundamental problem with it, it just needs to be implemented in the macros (help wanted!). Reusing lifetimes from the outer scope (i.e. in static associated functions) is also not allowed, so all involved lifetimes must be elided.
+1. It doesn't currently support generics. There's no fundamental problem with it, it just needs to be implemented in the macros (help wanted!).
 
 2. All arguments must be simple identifiers (so things like `(x, y): (i32, i32)` are not allowed). Again, this should be possible to implement, it's just not implemented yet.
 
