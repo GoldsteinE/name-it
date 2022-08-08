@@ -218,19 +218,9 @@ pub const fn align_of_fut<F: FutParams>(_: &F) -> usize {
 }
 
 macro_rules! impl_fut_params {
-    ($t:ident) => {
+    ($($t:ident $($ts:ident)*)?) => {
         // SAFETY: we're implementing this for a function returning `Fut`
-        unsafe impl<$t, R, Fut> FutParams for fn($t) -> Fut
-        where
-            Fut: Future<Output = R>
-        {
-            type Fut = Fut;
-            type Output = R;
-        }
-    };
-    ($t:ident $($ts:ident)*) => {
-        // SAFETY: we're implementing this for a function returning `Fut`
-        unsafe impl<$t, $($ts),*, R, Fut> FutParams for fn($t, $($ts),*) -> Fut
+        unsafe impl<$($t, $($ts,)*)? R, Fut> FutParams for fn($($t, $($ts,)*)?) -> Fut
         where
             Fut: Future<Output = R>
         {
@@ -238,17 +228,8 @@ macro_rules! impl_fut_params {
             type Output = R;
         }
 
-        impl_fut_params!($($ts)*);
+        $(impl_fut_params!($($ts)*);)?
     };
-}
-
-// SAFETY: we're implementing this for a function returning `Fut`
-unsafe impl<R, Fut> FutParams for fn() -> Fut
-where
-    Fut: Future<Output = R>,
-{
-    type Fut = Fut;
-    type Output = R;
 }
 
 impl_fut_params!(
