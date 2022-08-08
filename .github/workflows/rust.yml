@@ -25,7 +25,7 @@ jobs:
     - name: Check formatting
       run: cargo fmt --check
     - name: Check README.md
-      run: diff README.md <(cat readme-parts/{header,license,main}.md)
+      run: diff README.md <(cat readme-parts/{header,main,license}.md)
     - name: Build
       run: cargo build --verbose
     - name: Run tests
