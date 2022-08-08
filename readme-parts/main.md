@@ -1,8 +1,3 @@
-So, you have a nice `async fn` and you want to store a future it returns in a struct. There’s
-no need for boxing or dynamic dispatch: you statically know the type. You just need to...
-
-# name-it
-
 ```rust
 #[name_it(Test)]
 async fn add(x: i32, y: i32) -> i32 {
@@ -54,6 +49,3 @@ Nonetheless, I can't be completely sure that it is sound yet. If you find any so
 
 4. While the underlying trick could work on most `impl Trait` types, this crate only implements it for `async fn`. It's not clear how to make the macro work for any trait.
 
-# License
-
-Blue Oak Model License 1.0.0 is permissive, non-copyleft license.
