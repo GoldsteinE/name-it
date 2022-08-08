@@ -1,14 +1,3 @@
-```rust
-#[name_it(Test)]
-async fn add(x: i32, y: i32) -> i32 {
-    do_something_very_async().await;
-    x + y
-}
-
-let foo: Test = add(2, 3);
-assert_eq!(block_on(foo), 5);
-```
-
 Function attributes (including doc comments) are preserved. Created type will have the same visibility as the function itself and the same size and alignment as original future.
 
 **MSRV** is 1.61. As far as I know, it’s impossible to make it work on older Rust versions.

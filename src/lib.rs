@@ -1,6 +1,22 @@
 //! So, you have a nice `async fn` and you want to store a future it returns in
 //! a struct. There's no need for boxing or dynamic dispatch: you statically
 //! know the type. You just need to `#[name_it]`.
+//!
+//! ```rust
+//! # use name_it::name_it;
+//! # use futures::executor::block_on;
+//! # async fn do_something_very_async() {}
+//! #[name_it(Test)]
+//! async fn add(x: i32, y: i32) -> i32 {
+//!     do_something_very_async().await;
+//!     x + y
+//! }
+//! 
+//! # fn main() {
+//! let foo: Test = add(2, 3);
+//! assert_eq!(block_on(foo), 5);
+//! # }
+//! ```
 #![doc = include_str!("../readme-parts/main.md")]
 #![no_std]
 // lint me harder
