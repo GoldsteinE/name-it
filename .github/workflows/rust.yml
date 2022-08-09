@@ -21,8 +21,16 @@ jobs:
           override: true
           profile: minimal
           components: rustfmt, clippy, miri, rust-src
+    - name: Install SARIF support
+      run: cargo install clippy-sarif sarif-fmt
     - name: Clippy
-      run: cargo clippy --verbose
+      run: cargo clippy --all-features --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
+      continue-on-error: true
+    - name: Upload SARIF results
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: rust-clippy-results.sarif
+        wait-for-processing: true
     - name: Check formatting
       run: cargo fmt --check
     - name: Check README.md
