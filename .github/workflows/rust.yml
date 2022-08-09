@@ -19,6 +19,7 @@ jobs:
       with:
           toolchain: nightly
           override: true
+          profile: minimal
           components: rustfmt, clippy, miri 
     - name: Clippy
       run: cargo clippy --verbose
@@ -36,3 +37,21 @@ jobs:
       run: cargo miri test -- --skip ui
     - name: Run miri doctests
       run: cargo miri test --doc
+  build_stable:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install latest stable
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: stable
+          override: true
+          profile: minimal
+          components: rustc, cargo
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      # UI tests are too brittle to run them on two different toolchains
+      run: cargo test --verbose -- --skip ui
+    - name: Run doctests
+      run: cargo test --doc --verbose

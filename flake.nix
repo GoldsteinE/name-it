@@ -29,6 +29,7 @@
             cargo-expand
             cargo-readme
             cargo-msrv
+            act
           ];
         };
       }
