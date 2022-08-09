@@ -30,6 +30,7 @@
             cargo-readme
             cargo-msrv
             act
+            actionlint
           ];
         };
       }
