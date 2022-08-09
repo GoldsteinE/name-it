@@ -8,58 +8,115 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  NIGHTLY_TOOLCHAIN: nightly-2022-08-09
+  STABLE_TOOLCHAIN: 1.62.1
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v3
+    - name: Try to restore toolchain, sccache dir & other crates from cache
+      id: cache-toolchain
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo
+          ~/.rustup
+          ~/.cache/sccache
+        key: ${{ runner.os }}-nightly-${{ env.NIGHTLY_TOOLCHAIN }}-reset1
+
     - name: Install nightly
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: nightly-2022-08-09
+          toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
           override: true
           profile: minimal
           components: rustfmt, clippy, miri, rust-src
+      if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+
     - name: Install SARIF support
       run: cargo install clippy-sarif sarif-fmt
+      if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+    
+    - name: Install sccache
+      run: cargo install sccache
+      if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+
     - name: Clippy
-      run: cargo clippy --all-features --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
+      run: cargo clippy --all-features --message-format=json -- -D warnings | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
+      env:
+        RUSTC_WRAPPER: sccache
       continue-on-error: true
+
     - name: Upload SARIF results
-      uses: github/codeql-action/upload-sarif@v1
+      uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: rust-clippy-results.sarif
         wait-for-processing: true
+
     - name: Check formatting
       run: cargo fmt --check
+
     - name: Check README.md
       run: diff README.md <(cat readme-parts/{header,main,license}.md)
-    - name: Build
-      run: cargo build --verbose
+
     - name: Run tests
       run: cargo test --verbose
+      env:
+        RUSTC_WRAPPER: sccache
+
     - name: Run doctests
       run: cargo test --doc --verbose
+      env:
+        RUSTC_WRAPPER: sccache
+
     - name: Run miri
       run: cargo miri test -- --skip ui
+      env:
+        RUSTC_WRAPPER: sccache
+
     - name: Run miri doctests
       run: cargo miri test --doc
+      env:
+        RUSTC_WRAPPER: sccache
+
   build_stable:
     runs-on: ubuntu-latest
     steps:
+
     - uses: actions/checkout@v3
-    - name: Install latest stable
+    - name: Try to restore toolchain & SARIF support from cache
+      id: cache-toolchain
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo
+          ~/.rustup
+          ~/.cache/sccache
+        key: ${{ runner.os }}-stable-${{ env.STABLE_TOOLCHAIN }}-reset1
+
+    - name: Install stable
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: stable
+          toolchain: ${{ env.STABLE_TOOLCHAIN }}
           override: true
           profile: minimal
           components: rustc, cargo
-    - name: Build
-      run: cargo build --verbose
+      if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+
+    - name: Install sccache
+      run: cargo install sccache
+      if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+
     - name: Run tests
       # UI tests are too brittle to run them on two different toolchains
       run: cargo test --verbose -- --skip ui
+      env:
+        RUSTC_WRAPPER: sccache
+
     - name: Run doctests
       run: cargo test --doc --verbose
+      env:
+        RUSTC_WRAPPER: sccache
