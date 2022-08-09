@@ -16,7 +16,7 @@
       {
         devShell = pkgs.mkShell {
           buildInputs = with pkgs; [
-            (rust-bin.nightly."2022-08-04".default.override {
+            (rust-bin.nightly."2022-08-09".default.override {
               extensions = [
                 "rust-src"
                 "cargo"

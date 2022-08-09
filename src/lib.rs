@@ -65,6 +65,11 @@ use core::{
 /// for more info.
 pub use name_it_macros::name_it;
 
+// Manual formatting looks better here
+#[rustfmt::skip]
+#[doc(hidden)]
+pub mod markers;
+
 // SAFETY: can only be implemented on functions returning `Self::Fut`
 #[doc(hidden)]
 pub unsafe trait FutParams {
@@ -74,6 +79,23 @@ pub unsafe trait FutParams {
 
 #[doc(hidden)]
 pub use elain as _elain;
+
+#[doc(hidden)]
+// This function is never called, it's only a placeholder
+#[allow(clippy::panic)]
+pub fn any<T>(_: &str) -> T {
+    panic!()
+}
+
+#[doc(hidden)]
+#[macro_export]
+macro_rules! _produce_any {
+    ($f:ident $($xs:pat),*$(,)?) => {
+        $f(
+            $($crate::any(stringify!($xs))),*
+        )
+    }
+}
 
 #[doc(hidden)]
 #[macro_export]
@@ -88,6 +110,7 @@ macro_rules! _name_it_inner {
             _alignment: $crate::_elain::Align<{$crate::align_of_fut(&($func as fn($($underscores)*) -> _))}>,
             // FIXME: invariant is probably too strict
             _lifetime: ::core::marker::PhantomData<&'fut mut &'fut mut ()>,
+            _markers: $crate::markers!($crate::_produce_any!($func $($underscores)*)),
         }
 
         impl<'fut> $name<'fut> {
@@ -97,6 +120,7 @@ macro_rules! _name_it_inner {
                     bytes,
                     _alignment: $crate::_elain::Align::NEW,
                     _lifetime: ::core::marker::PhantomData,
+                    _markers: $crate::markers::Markers::new(),
                 }
             }
         }

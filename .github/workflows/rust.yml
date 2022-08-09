@@ -14,13 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Install latest nightly
+    - name: Install nightly
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: nightly
+          toolchain: nightly-2022-08-09
           override: true
           profile: minimal
-          components: rustfmt, clippy, miri 
+          components: rustfmt, clippy, miri, rust-src
     - name: Clippy
       run: cargo clippy --verbose
     - name: Check formatting
