@@ -55,6 +55,7 @@ jobs:
       with:
         sarif_file: rust-clippy-results.sarif
         wait-for-processing: true
+      if: ${{ github.event-name == 'pull_request' }}
 
     - name: Check formatting
       run: cargo fmt --check
