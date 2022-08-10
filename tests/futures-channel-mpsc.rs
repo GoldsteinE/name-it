@@ -23,6 +23,7 @@ impl AssertSend for mpsc::Sender<i32> {}
 impl AssertSend for mpsc::Receiver<i32> {}
 
 #[test]
+#[ignore]
 fn send_recv() {
     let (mut tx, rx) = mpsc::channel::<i32>(16);
 
@@ -33,6 +34,7 @@ fn send_recv() {
 }
 
 #[test]
+#[ignore]
 fn send_recv_no_buffer() {
     // Run on a task context
     block_on(poll_fn(move |cx| {
@@ -69,6 +71,7 @@ fn send_recv_no_buffer() {
 }
 
 #[test]
+#[ignore]
 fn send_shared_recv() {
     let (mut tx1, rx) = mpsc::channel::<i32>(16);
     let mut rx = block_on_stream(rx);
@@ -82,6 +85,7 @@ fn send_shared_recv() {
 }
 
 #[test]
+#[ignore]
 fn send_recv_threads() {
     let (mut tx, rx) = mpsc::channel::<i32>(16);
 
@@ -96,6 +100,7 @@ fn send_recv_threads() {
 }
 
 #[test]
+#[ignore]
 fn send_recv_threads_no_capacity() {
     let (mut tx, rx) = mpsc::channel::<i32>(0);
 
@@ -111,6 +116,7 @@ fn send_recv_threads_no_capacity() {
 }
 
 #[test]
+#[ignore]
 fn recv_close_gets_none() {
     let (mut tx, mut rx) = mpsc::channel::<i32>(10);
 
@@ -129,6 +135,7 @@ fn recv_close_gets_none() {
 }
 
 #[test]
+#[ignore]
 fn tx_close_gets_none() {
     let (_, mut rx) = mpsc::channel::<i32>(10);
 
@@ -207,6 +214,7 @@ fn tx_close_gets_none() {
 // }
 
 #[test]
+#[ignore]
 fn stress_shared_unbounded() {
     const AMT: u32 = if cfg!(miri) { 100 } else { 10000 };
     const NTHREADS: u32 = 8;
@@ -236,6 +244,7 @@ fn stress_shared_unbounded() {
 }
 
 #[test]
+#[ignore]
 fn stress_shared_bounded_hard() {
     const AMT: u32 = if cfg!(miri) { 100 } else { 10000 };
     const NTHREADS: u32 = 8;
@@ -265,6 +274,7 @@ fn stress_shared_bounded_hard() {
 }
 
 #[test]
+#[ignore]
 fn stress_receiver_multi_task_bounded_hard() {
     const AMT: usize = if cfg!(miri) { 100 } else { 10_000 };
     const NTHREADS: u32 = 2;
@@ -359,6 +369,7 @@ async fn send_one_two_three(mut tx: mpsc::Sender<i32>) {
 
 /// Stress test that after receiver dropped,
 /// no messages are lost.
+#[ignore]
 fn stress_close_receiver_iter() {
     let (tx, rx) = mpsc::unbounded();
     let mut rx = block_on_stream(rx);
@@ -391,6 +402,7 @@ fn stress_close_receiver_iter() {
 }
 
 #[test]
+#[ignore]
 fn stress_close_receiver() {
     const ITER: usize = if cfg!(miri) { 50 } else { 10000 };
 
@@ -440,6 +452,7 @@ fn stress_poll_ready() {
 }
 
 #[test]
+#[ignore]
 fn try_send_1() {
     const N: usize = if cfg!(miri) { 100 } else { 3000 };
     let (mut tx, rx) = mpsc::channel(0);
@@ -463,6 +476,7 @@ fn try_send_1() {
 }
 
 #[test]
+#[ignore]
 fn try_send_2() {
     let (mut tx, rx) = mpsc::channel(0);
     let mut rx = block_on_stream(rx);
@@ -490,6 +504,7 @@ fn try_send_2() {
 }
 
 #[test]
+#[ignore]
 fn try_send_fail() {
     let (mut tx, rx) = mpsc::channel(0);
     let mut rx = block_on_stream(rx);
@@ -509,6 +524,7 @@ fn try_send_fail() {
 }
 
 #[test]
+#[ignore]
 fn try_send_recv() {
     let (mut tx, mut rx) = mpsc::channel(1);
     tx.try_send("hello").unwrap();
@@ -523,6 +539,7 @@ fn try_send_recv() {
 }
 
 #[test]
+#[ignore]
 fn same_receiver() {
     let (mut txa1, _) = mpsc::channel::<i32>(1);
     let txa2 = txa1.clone();
@@ -542,6 +559,7 @@ fn same_receiver() {
 }
 
 #[test]
+#[ignore]
 fn is_connected_to() {
     let (txa, rxa) = mpsc::channel::<i32>(1);
     let (txb, rxb) = mpsc::channel::<i32>(1);
@@ -553,6 +571,7 @@ fn is_connected_to() {
 }
 
 #[test]
+#[ignore]
 fn hash_receiver() {
     use std::{collections::hash_map::DefaultHasher, hash::Hasher};
 
@@ -601,6 +620,7 @@ fn hash_receiver() {
 }
 
 #[test]
+#[ignore]
 fn send_backpressure() {
     let (waker, counter) = new_count_waker();
     let mut cx = Context::from_waker(&waker);
@@ -622,6 +642,7 @@ fn send_backpressure() {
 }
 
 #[test]
+#[ignore]
 fn send_backpressure_multi_senders() {
     let (waker, counter) = new_count_waker();
     let mut cx = Context::from_waker(&waker);

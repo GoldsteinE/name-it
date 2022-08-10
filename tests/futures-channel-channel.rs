@@ -32,6 +32,7 @@ async fn send_sequence(n: u32, mut sender: mpsc::Sender<u32>) {
 }
 
 #[test]
+#[ignore]
 fn drop_sender() {
     let (tx, mut rx) = mpsc::channel::<u32>(1);
     drop(tx);
@@ -40,6 +41,7 @@ fn drop_sender() {
 }
 
 #[test]
+#[ignore]
 fn drop_rx() {
     let (mut tx, rx) = mpsc::channel::<u32>(1);
     block_on(tx.send(1)).unwrap();
@@ -48,6 +50,7 @@ fn drop_rx() {
 }
 
 #[test]
+#[ignore]
 fn drop_order() {
     static DROPS: AtomicUsize = AtomicUsize::new(0);
     let (mut tx, rx) = mpsc::channel(1);
