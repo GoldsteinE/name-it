@@ -245,6 +245,7 @@ pub fn name_it(attr: TokenStream, func: TokenStream) -> TokenStream {
 
         #vis type #type_name<'fut> = ::name_it::Named<#module_name::#type_name<'fut>>;
 
+        #[allow(unused_mut)]
         #wrapped_func
     }
     .into()

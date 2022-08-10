@@ -15,6 +15,7 @@
       in
       {
         devShell = pkgs.mkShell {
+          RUST_LOG = "info";
           buildInputs = with pkgs; [
             (rust-bin.nightly."2022-08-09".default.override {
               extensions = [
@@ -31,6 +32,9 @@
             cargo-msrv
             act
             actionlint
+            # for tools
+            openssl
+            pkg-config
           ];
         };
       }

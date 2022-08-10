@@ -53,3 +53,7 @@ Nonetheless, I can't be completely sure that it is sound yet. If you find any so
 # License
 
 Blue Oak Model License 1.0.0 is permissive, non-copyleft license.
+
+Files `tests/futures-*` are from the [futures-rs] project.
+
+[futures-rs]: https://github.com/rust-lang/futures-rs
