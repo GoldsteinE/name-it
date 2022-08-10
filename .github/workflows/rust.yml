@@ -74,15 +74,31 @@ jobs:
       env:
         RUSTC_WRAPPER: sccache
 
+  miri:
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v3
+    - name: Try to restore toolchain from cache
+      id: cache-toolchain
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo
+          ~/.rustup
+        key: ${{ runner.os }}-nightly-miri-${{ env.NIGHTLY_TOOLCHAIN }}-reset1
+
+    - name: Install nightly
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: ${{ env.NIGHTLY_TOOLCHAIN }}
+          override: true
+          profile: minimal
+          components: miri, rust-src
+      if: ${{ steps.cache-toolchain.outputs.cache-hit != 'true' }}
+
     - name: Run miri
       run: cargo miri test -- --skip ui
-      env:
-        RUSTC_WRAPPER: sccache
-
-    - name: Run miri doctests
-      run: cargo miri test --doc
-      env:
-        RUSTC_WRAPPER: sccache
 
   build_stable:
     runs-on: ubuntu-latest
