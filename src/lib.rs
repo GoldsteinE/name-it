@@ -131,9 +131,14 @@ macro_rules! _name_it_inner {
             fn poll(self: ::core::pin::Pin<&mut Self>, cx: &mut ::core::task::Context<'_>) -> ::core::task::Poll<$ret> {
                 // SAFETY:
                 // 1. `::poll()` is safe since we're not lying about the type
-                // 2. `.map_unchecked_mut()` is safe since we're only accessing this field pinned
+                // 2. `transmute()` is safe since the representation is the same
                 unsafe {
-                    $crate::poll(self.map_unchecked_mut(|this| &mut this.bytes), cx, $func as fn($($underscores)*) -> _)
+                    $crate::poll(
+                        ::core::mem::transmute::<
+                            _, ::core::pin::Pin<&mut [::core::mem::MaybeUninit<u8>; $crate::size_of_fut(&($func as fn($($underscores)*) -> _))]>
+                        >(self),
+                        cx, $func as fn($($underscores)*) -> _
+                    )
                 }
             }
         }
@@ -155,7 +160,10 @@ macro_rules! _name_it_inner {
 /// ```rust,ignore
 /// type YourName<'fut> = Named</* implementation detail */>;
 /// ```
+#[repr(transparent)]
 pub struct Named<T> {
+    // Oh, we read this field, just not as you expected, poor rustc
+    #[allow(dead_code)]
     inner: T,
     _pinned: PhantomPinned,
 }
@@ -178,8 +186,8 @@ where
 
     #[inline]
     fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
-        // SAFETY: we'll never use `.inner` unpinned
-        unsafe { self.map_unchecked_mut(|this| &mut this.inner) }.poll(cx)
+        // SAFETY: the representation is the same
+        unsafe { core::mem::transmute::<_, Pin<&mut T>>(self) }.poll(cx)
     }
 }
 
@@ -212,12 +220,7 @@ pub unsafe fn poll<F: FutParams, const N: usize>(
 ) -> Poll<F::Output> {
     // SAFETY: `transmute_generic()` is safe because caller promised us that's the
     // type inside
-    let fut = unsafe {
-        this.map_unchecked_mut(|x| {
-            // SAFETY: is safe because we never access this field unpinned
-            transmute_generic::<&mut _, &mut F::Fut>(x)
-        })
-    };
+    let fut = unsafe { transmute_generic::<Pin<&mut _>, Pin<&mut F::Fut>>(this) };
     fut.poll(cx)
 }
 
