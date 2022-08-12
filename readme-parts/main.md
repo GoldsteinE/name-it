@@ -42,7 +42,9 @@ Microsoft's [stackfuture] indeed takes a similar approach to solve this problem.
 
 2. `stackfuture` doesn't use macros, so is friendlier to tooling, and supports generics. It can also be directly used in methods, including trait methods.
 
-3. [stackfuture is unsound] for now, but I believe this would be promptly fixed, given that the fix is trivial.
+3. `stackfuture` uses dynamic dispatch. `name-it` is fully static, there're no dynamic function calls.
+
+4. [stackfuture is unsound] for now, but I believe this would be promptly fixed, given that the fix is trivial.
 
 [stackfuture]: https://github.com/microsoft/stackfuture/
 [stackfuture is unsound]: https://github.com/microsoft/stackfuture/issues/9
