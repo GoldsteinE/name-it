@@ -34,3 +34,15 @@ Nonetheless, I can't be completely sure that it is sound yet. If you find any so
 
 3. While the underlying trick could work on most `impl Trait` types, this crate only implements it for `async fn`. It's not clear how to make the macro work for any trait.
 
+## What about `stackfuture`?
+
+Microsoft's [stackfuture] indeed takes a similar approach to solve this problem. Key differences:
+
+1. `name-it` automatically infers type size, alignment and auto traits. `stackfuture` has fixed alignment, manually specified size and is always `Send + !Sync`.
+
+2. `stackfuture` doesn't use macros, so is friendlier to tooling, and supports generics. It can also be directly used in methods, including trait methods.
+
+3. [stackfuture is unsound] for now, but I believe this would be promptly fixed, given that the fix is trivial.
+
+[stackfuture]: https://github.com/microsoft/stackfuture/
+[stackfuture is unsound]: https://github.com/microsoft/stackfuture/issues/9
