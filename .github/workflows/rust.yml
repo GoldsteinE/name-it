@@ -8,8 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  NIGHTLY_TOOLCHAIN: nightly-2022-08-09
-  STABLE_TOOLCHAIN: 1.62.1
+  NIGHTLY_TOOLCHAIN: nightly-2022-11-25
+  STABLE_TOOLCHAIN: '1.65'
 
 jobs:
   build:
