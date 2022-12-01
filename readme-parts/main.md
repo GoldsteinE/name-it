@@ -4,7 +4,11 @@ Function attributes (including doc comments) are preserved. Created type will ha
 
 ## Safety
 
-I don't see why this would be unsound. Miri likes it, I discussed it with other people, and all unsafe involved isn't particulary criminal.
+~~I don't see why this would be unsound. Miri likes it, I discussed it with other people, and all unsafe involved isn't particulary criminal.~~
+
+Miri doesn't like it anymore, see [this build run](https://github.com/GoldsteinE/name-it/actions/runs/3594297524/jobs/6052384905).
+
+This problem was reported for discussion at UCG repo: <https://github.com/rust-lang/unsafe-code-guidelines/issues/380>
 
 To address some particular concerns:
 
