@@ -1,6 +1,6 @@
 [package]
 name = "name-it"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "Give a name to async fn return types"
 repository = "https://github.com/GoldsteinE/name-it"

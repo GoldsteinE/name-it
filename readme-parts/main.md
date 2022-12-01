@@ -22,13 +22,13 @@ Nonetheless, I can't be completely sure that it is sound yet. If you find any so
 
 ### Absolute
 
-1. It emulates TAITs, but it can’t emulate GATs, so async trait methods capturing `self` by ref are no-go.
+1. It can’t be directly applied to a method or associated function. You can move the body of the method into a free function and make your method a thin wrapper.
 
-2. It can’t be directly applied to a method or associated function. You can move the body of the method into a free function and make your method a thin wrapper.
+2. It doesn’t support functions with _type_ generics. This is caused by limitations on using generics in const context.
 
 ### (Probably) solvable
 
-1. It doesn't currently support generics. There's no fundamental problem with it, it just needs to be implemented in the macros (help wanted!).
+1. It doesn't currently support explicit _lifetime_ generics either. There's no fundamental problem with it, it just needs to be implemented in the macros (help wanted!).
 
 2. All arguments must be simple identifiers (so things like `(x, y): (i32, i32)` are not allowed). Again, this should be possible to implement, it's just not implemented yet.
 
